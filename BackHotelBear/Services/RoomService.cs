@@ -157,7 +157,6 @@ namespace BackHotelBear.Services
             })
             .ToListAsync();
         }
-
         public async Task<RoomDetailDto?> GetRoomDetailAsync(Guid roomId)
         {
             var room = await _context.Rooms
@@ -183,13 +182,26 @@ namespace BackHotelBear.Services
                 }).ToList()
             };
         }
-        public async Task<List<RoomCalendarDto>> GetRoomCalendarAsync(DateTime? startDate = null, DateTime? endDate = null)
+        //usato
+        public async Task<List<RoomCalendarDto>> GetRoomCalendarAsync(
+    DateTime? startDate = null,
+    DateTime? endDate = null)
         {
             var start = startDate?.Date ?? DateTime.Today;
             var end = endDate?.Date ?? start.AddDays(15);
 
             if (end < start)
                 throw new ArgumentException("endDate must be >= startDate");
+
+            var rooms = await _context.Rooms
+                .Select(r => new
+                {
+                    r.Id,
+                    r.RoomNumber,
+                    r.RoomName,
+                    r.PriceForNight
+                })
+                .ToListAsync();
 
             var reservations = await _context.Reservations
                 .Where(r =>
@@ -201,53 +213,40 @@ namespace BackHotelBear.Services
                     r.Id,
                     r.RoomId,
                     r.CheckIn,
-                    r.CheckOut
+                    r.CheckOut,
+                    r.FirstName,
+                    r.LastName,
+                    r.Status
                 })
                 .ToListAsync();
-            
+
             var reservationsByRoom = reservations
                 .GroupBy(r => r.RoomId)
                 .ToDictionary(g => g.Key, g => g.ToList());
-
-            
-            var rooms = await _context.Rooms
-                .Select(r => new
-                {
-                    r.Id,
-                    r.RoomNumber
-                })
-                .ToListAsync();
-
-            var daysCount = (end - start).Days + 1;
 
             var result = rooms.Select(room =>
             {
                 reservationsByRoom.TryGetValue(room.Id, out var roomReservations);
 
-                var days = Enumerable.Range(0, daysCount)
-                    .Select(offset =>
-                    {
-                        var date = start.AddDays(offset);
-
-                        var reservation = roomReservations?
-                            .FirstOrDefault(r =>
-                                r.CheckIn <= date &&
-                                r.CheckOut > date);
-
-                        return new RoomDayDto
-                        {
-                            Date = date,
-                            IsOccupied = reservation != null,
-                            ReservationId = reservation?.Id
-                        };
-                    })
-                    .ToList();
-
                 return new RoomCalendarDto
                 {
                     RoomId = room.Id,
                     RoomNumber = room.RoomNumber,
-                    Days = days
+                    RoomName= room.RoomName,
+                    RoomPrice=room.PriceForNight,
+                    Reservations = roomReservations?
+                        .Select(r => new ReservationBarDto
+                        {
+                            ReservationId = r.Id,
+                            CheckIn = r.CheckIn,
+                            CheckOut = r.CheckOut,
+                            GuestName = $"{r.FirstName} {r.LastName}",
+                            Status = r.Status,
+                            StartsBeforeRange = r.CheckIn < start,
+                            EndsAfterRange = r.CheckOut > end
+                        })
+                        .OrderBy(r => r.CheckIn)
+                        .ToList() ?? new()
                 };
             }).ToList();
 
@@ -294,6 +293,26 @@ namespace BackHotelBear.Services
                 IsOccupied = true,
                 ReservationId = reservationId
             };
+        }
+
+        public async Task<bool> SetCoverPhotoAsync(Guid photoId)
+        {
+            var photo = await _context.RoomPhotos
+                .Include(p => p.Room)
+                .ThenInclude(r => r.Photos)
+                .FirstOrDefaultAsync(p => p.Id == photoId);
+
+            if (photo == null) return false;
+
+            // reset tutte le cover della stanza
+            foreach (var p in photo.Room.Photos)
+                p.IsCover = false;
+
+            // imposta questa come cover
+            photo.IsCover = true;
+
+            await _context.SaveChangesAsync();
+            return true;
         }
 
     }

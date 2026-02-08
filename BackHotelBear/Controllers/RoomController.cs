@@ -19,8 +19,8 @@ namespace BackHotelBear.Controllers
 
         //CREATE
         [HttpPost]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create([FromForm] CreateRoomDto dto)
+        //[Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create([FromBody] CreateRoomDto dto)
         {
             var room = await _roomService.CreateRoomAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = room.Id }, room);
@@ -29,11 +29,19 @@ namespace BackHotelBear.Controllers
         //UPDATE
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(Guid id, [FromForm] UpdateRoomDto dto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateRoomDto dto)
         {
-            var room = await _roomService.UpdateRoomAsync(id, dto);
-            if (room == null) return NotFound();
-            return Ok(room);
+            try
+            {
+                var room = await _roomService.UpdateRoomAsync(id, dto);
+                if (room == null) return NotFound();
+                return Ok(room);
+            }
+            catch (Exception ex)
+            {
+                // ritorna messaggio reale per debug
+                return StatusCode(500, ex.Message);
+            }
         }
 
         //DELETE
@@ -62,8 +70,9 @@ namespace BackHotelBear.Controllers
             var rooms = await _roomService.GetAllRoomsAsync();
             return Ok(rooms);
         }
-
+        //usato
         [HttpGet("calendar")]
+        [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
         public async Task<ActionResult<List<RoomCalendarDto>>> GetRoomCalendar(
         [FromQuery] DateTime? startDate,
         [FromQuery] DateTime? endDate)
@@ -100,6 +109,19 @@ namespace BackHotelBear.Controllers
             if (!deleted) return NotFound();
             return NoContent();
         }
+
+        // SET COVER PHOTO
+        [HttpPatch("photos/{photoId}/cover")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SetCover(Guid photoId)
+        {
+            var updated = await _roomService.SetCoverPhotoAsync(photoId);
+
+            if (!updated) return NotFound();
+
+            return NoContent();
+        }
+
 
     }
 }

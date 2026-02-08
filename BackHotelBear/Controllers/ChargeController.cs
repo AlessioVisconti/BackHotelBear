@@ -16,7 +16,7 @@ namespace BackHotelBear.Controllers
             _chargeService = chargeService;
         }
 
-        //CREATE
+        //CREATE-USATO
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ChargeDto dto)
         {
@@ -35,7 +35,7 @@ namespace BackHotelBear.Controllers
             }
         }
 
-        //UPDATE
+        //UPDATE-USATO
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] ChargeDto dto)
         {
@@ -54,7 +54,7 @@ namespace BackHotelBear.Controllers
             }
         }
 
-        //DELETE
+        //DELETE-USATO
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {

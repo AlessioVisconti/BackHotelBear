@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using BackHotelBear.Models.Entity.ReservationAndEnum;
+using System.ComponentModel.DataAnnotations;
 
 namespace BackHotelBear.Models.Dtos.ReservationDtos
 {
@@ -17,6 +18,6 @@ namespace BackHotelBear.Models.Dtos.ReservationDtos
         public DateTime? CheckOut { get; set; }
         [MaxLength(150)]
         public string? Note { get; set; }
-        public string? Status { get; set; }
+        public ReservationStatus? Status { get; set; }
     }
 }

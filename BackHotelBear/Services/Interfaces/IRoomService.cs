@@ -15,5 +15,6 @@ namespace BackHotelBear.Services.Interfaces
         Task<List<RoomAvailabilityDto>> GetRoomOccupiedDatesAsync(Guid roomId);
         Task<List<RoomCalendarDto>> GetRoomCalendarAsync(DateTime? startDate = null, DateTime? endDate = null);
         Task<RoomDayClickResultDto> CheckRoomAvailabilityAsync(Guid roomId, DateTime day);
+        Task<bool> SetCoverPhotoAsync(Guid photoId);
     }
 }

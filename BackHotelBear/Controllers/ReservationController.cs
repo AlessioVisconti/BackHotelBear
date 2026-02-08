@@ -17,7 +17,7 @@ namespace BackHotelBear.Controllers
             _reservationService = reservationService;
         }
 
-        //CREATE
+        //CREATE-USATO
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> CreateReservation([FromBody] CreateReservationDto dto)
@@ -41,7 +41,7 @@ namespace BackHotelBear.Controllers
             return CreatedAtAction(nameof(GetReservationById), new { id = result.Reservation!.Id }, result.Reservation);
         }
 
-        //UPDATE
+        //UPDATE-USATO
         [HttpPut("{id:guid}")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> UpdateReservation(Guid id, [FromBody] UpdateReservationDto dto)
@@ -56,7 +56,7 @@ namespace BackHotelBear.Controllers
             return Ok(result.Reservation);
         }
 
-        //GET
+        //GET-USATO
         [HttpGet("{id:guid}")]
         [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
         public async Task<IActionResult> GetReservationById(Guid id)
@@ -69,7 +69,7 @@ namespace BackHotelBear.Controllers
             return Ok(reservation);
         }
 
-        //SOFT DELETE
+        //SOFT DELETE-USATO
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> CancelReservation(Guid id)
@@ -84,7 +84,7 @@ namespace BackHotelBear.Controllers
             return NoContent();
         }
 
-        //SEARCH
+        //SEARCH-USATO
         [HttpPost("search")]
         [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
         public async Task<IActionResult> SearchReservations([FromBody] ReservationSearchDto dto)
@@ -92,5 +92,7 @@ namespace BackHotelBear.Controllers
             var reservations = await _reservationService.SearchReservationAsync(dto);
             return Ok(reservations);
         }
+
+        //Aggiungere metodo per fare al get di tutte le soft-delete + aggiungere hard delete per quelle.
     }
 }

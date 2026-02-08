@@ -4,6 +4,8 @@
     {
         public Guid RoomId { get; set; }
         public string RoomNumber { get; set; } = null!;
-        public List<RoomDayDto> Days { get; set; } = new();
+        public string RoomName { get; set; } = null!;
+        public decimal RoomPrice { get; set; }
+        public List<ReservationBarDto> Reservations { get; set; } = new();
     }
 }

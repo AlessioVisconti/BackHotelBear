@@ -14,6 +14,7 @@ namespace BackHotelBear.Services
         {
             _context = context;
         }
+
         public async Task<GuestResult> CreateGuestAsync(GuestDto dto)
         {
             var reservation = await _context.Reservations
@@ -21,6 +22,7 @@ namespace BackHotelBear.Services
 
             if (reservation == null)
                 return new GuestResult { Success = false, ErrorMessage = "Reservation not found" };
+
             try
             {
                 ValidateGuestDto(dto, reservation.Id);
@@ -37,7 +39,7 @@ namespace BackHotelBear.Services
                 BirthDate = dto.BirthDate,
                 BirthCity = dto.BirthCity,
                 Citizenship = dto.Citizenship,
-                Role = Enum.Parse<GuestRole>(dto.Role),
+                Role = Enum.TryParse<GuestRole>(dto.Role, out var r) ? r : GuestRole.Single,
                 TaxCode = dto.TaxCode,
                 Address = dto.Address,
                 CityOfResidence = dto.CityOfResidence,
@@ -55,6 +57,7 @@ namespace BackHotelBear.Services
 
             return new GuestResult { Success = true, Guest = await MapToDto(guest) };
         }
+
         public async Task<GuestResult> UpdateGuestAsync(Guid guestId, GuestDto dto)
         {
             var guest = await _context.Guests.FirstOrDefaultAsync(g => g.Id == guestId && g.DeletedAt == null);
@@ -66,7 +69,7 @@ namespace BackHotelBear.Services
             guest.BirthDate = dto.BirthDate != default ? dto.BirthDate : guest.BirthDate;
             guest.BirthCity = dto.BirthCity ?? guest.BirthCity;
             guest.Citizenship = dto.Citizenship ?? guest.Citizenship;
-            if (!string.IsNullOrWhiteSpace(dto.Role)) guest.Role = Enum.Parse<GuestRole>(dto.Role);
+            if (!string.IsNullOrWhiteSpace(dto.Role) && Enum.TryParse<GuestRole>(dto.Role, out var role)) guest.Role = role;
             guest.TaxCode = dto.TaxCode ?? guest.TaxCode;
             guest.Address = dto.Address ?? guest.Address;
             guest.CityOfResidence = dto.CityOfResidence ?? guest.CityOfResidence;
@@ -89,29 +92,27 @@ namespace BackHotelBear.Services
             }
 
             await _context.SaveChangesAsync();
-
             return new GuestResult { Success = true, Guest = await MapToDto(guest) };
         }
 
         public async Task<GuestResult> DeleteGuestAsync(Guid guestId)
         {
-            var guest = await _context.Guests.FirstOrDefaultAsync(g => g.Id == guestId && g.DeletedAt == null);
+            var guest = await _context.Guests.FirstOrDefaultAsync(g => g.Id == guestId);
             if (guest == null)
                 return new GuestResult { Success = false, ErrorMessage = "Guest not found" };
 
-            guest.DeletedAt = DateTime.UtcNow;
-            guest.DeletedBy = "System";
+            // Esegui hard delete
+            await _context.HardDeleteAsync(guest);
 
-            await _context.SaveChangesAsync();
-            return new GuestResult { Success = true, Guest = await MapToDto(guest) };
+            return new GuestResult { Success = true };
         }
 
         public async Task<List<GuestDto>> SearchGuestAsync(GuestResearchDto dto)
         {
-            var query = _context.Guests
-                .Where(g => g.DeletedAt == null);
+            var query = _context.Guests.Where(g => g.DeletedAt == null);
             if (!string.IsNullOrWhiteSpace(dto.Name))
                 query = query.Where(g => g.FirstName.Contains(dto.Name) || g.LastName.Contains(dto.Name));
+
             return await query
                 .Select(g => new GuestDto
                 {
@@ -135,18 +136,14 @@ namespace BackHotelBear.Services
                 .ToListAsync();
         }
 
-
         private async Task<GuestDto> MapToDto(Guest guest)
         {
             async Task<string?> ResolveUserAsync(string? userId)
             {
-                if (string.IsNullOrWhiteSpace(userId))
-                    return null;
+                if (string.IsNullOrWhiteSpace(userId)) return null;
 
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Id == userId);
-
-                return user != null ? user.FullName : userId;
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                return user?.FullName ?? userId;
             }
 
             return new GuestDto
@@ -177,9 +174,10 @@ namespace BackHotelBear.Services
             };
         }
 
-         private void ValidateGuestDto(GuestDto dto, Guid reservationId)
+        private void ValidateGuestDto(GuestDto dto, Guid reservationId)
         {
             if (!Enum.TryParse<GuestRole>(dto.Role, out var role)) return;
+
             if (role == GuestRole.Single || role == GuestRole.HeadOfFamily || role == GuestRole.GroupLeader)
             {
                 if (string.IsNullOrWhiteSpace(dto.TaxCode) ||
@@ -192,31 +190,29 @@ namespace BackHotelBear.Services
                 {
                     throw new ArgumentException($"Guest with role {role} must have all mandatory details filled.");
                 }
-
-                if (role == GuestRole.FamilyMember)
-                {
-                    var head = _context.Guests.FirstOrDefault(g =>
-                        g.ReservationId == reservationId &&
-                        g.Role == GuestRole.HeadOfFamily &&
-                        g.DeletedAt == null);
-
-                    if (head == null)
-                        throw new ArgumentException("FamilyMember must belong to a reservation with a HeadOfFamily.");
-                }
-
-                if (role == GuestRole.GroupMember)
-                {
-                    var leader = _context.Guests.FirstOrDefault(g =>
-                        g.ReservationId == reservationId &&
-                        g.Role == GuestRole.GroupLeader &&
-                        g.DeletedAt == null);
-
-                    if (leader == null)
-                        throw new ArgumentException("GroupMember must belong to a reservation with a GroupLeader.");
-                }
             }
 
-         }
+            if (role == GuestRole.FamilyMember)
+            {
+                var head = _context.Guests.FirstOrDefault(g =>
+                    g.ReservationId == reservationId &&
+                    g.Role == GuestRole.HeadOfFamily &&
+                    g.DeletedAt == null);
+
+                if (head == null)
+                    throw new ArgumentException("FamilyMember must belong to a reservation with a HeadOfFamily.");
+            }
+
+            if (role == GuestRole.GroupMember)
+            {
+                var leader = _context.Guests.FirstOrDefault(g =>
+                    g.ReservationId == reservationId &&
+                    g.Role == GuestRole.GroupLeader &&
+                    g.DeletedAt == null);
+
+                if (leader == null)
+                    throw new ArgumentException("GroupMember must belong to a reservation with a GroupLeader.");
+            }
+        }
     }
 }
-

@@ -68,8 +68,7 @@ namespace BackHotelBear.Services
             if (charge.IsInvoiced)
                 throw new InvalidOperationException("Cannot delete a charge that has been invoiced.");
 
-            _context.Charges.Remove(charge);
-            await _context.SaveChangesAsync();
+            await _context.HardDeleteAsync(charge);
         }
 
 

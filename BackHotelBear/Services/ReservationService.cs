@@ -18,6 +18,7 @@ namespace BackHotelBear.Services
         {
             _context = context;
         }
+        //USATO
         public async Task<ReservationResult> CreateReservationAsync(CreateReservationDto dto, string? customerId = null)
         {
             var checkIn = dto.CheckIn.Date;
@@ -63,6 +64,7 @@ namespace BackHotelBear.Services
                 Reservation = await GetReservationByIdAsync(reservation.Id)
             };
         }
+        //USATO
         public async Task<ReservationResult> UpdateReservationAsync(Guid reservationId, UpdateReservationDto dto, string? modifiedByUserId)
         {
             var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.Id == reservationId && r.DeletedAt == null);
@@ -97,9 +99,10 @@ namespace BackHotelBear.Services
             reservation.CheckIn = newCheckIn;
             reservation.CheckOut = newCheckOut;
             reservation.Note = dto.Note ?? reservation.Note;
+            reservation.Status = dto.Status ?? reservation.Status;
 
-            if (!string.IsNullOrWhiteSpace(dto.Status) && Enum.TryParse<ReservationStatus>(dto.Status, out var status))
-                reservation.Status = status;
+            if (dto.Status.HasValue)
+                reservation.Status = dto.Status.Value;
 
 
             await _context.SaveChangesAsync();
@@ -110,6 +113,7 @@ namespace BackHotelBear.Services
                 Reservation = await GetReservationByIdAsync(reservation.Id)
             };
         }
+        //USATO
         public async Task<ReservationResult> CancelReservationAsync(Guid reservationId, string? cancelledByUserId = null)
         {
             var reservation = await _context.Reservations
@@ -144,55 +148,237 @@ namespace BackHotelBear.Services
             };
         }
 
-        //trovare modo per snellire GetReservatuibByIdAsync
-        public async Task<ReservationDetailDto> GetReservationByIdAsync(Guid reservationId)
+        //USATO-trovare modo per snellire GetReservatuibByIdAsync
+        //public async Task<ReservationDetailDto> GetReservationByIdAsync(Guid reservationId)
+        //{
+
+        //    //vedere lazy loading, dovreti mettere relazioni come virtual
+        //    var reservation = await _context.Reservations
+        //          .Where(r => r.Id == reservationId && r.DeletedAt == null)
+        //          .Include(r => r.Room)
+        //          .Include(r => r.Payments)
+        //              .ThenInclude(p => p.PaymentMethod)
+        //          .Include(r => r.Charges)
+        //          .Include(r => r.Guests)
+        //          .Include(r => r.Invoices)
+        //              .ThenInclude(i => i.Items)
+        //          .Include(r => r.Invoices)
+        //              .ThenInclude(i => i.InvoicePayments)
+        //          .Include(r => r.Invoices)
+        //              .ThenInclude(i => i.Customer)
+        //          .FirstOrDefaultAsync();
+
+        //    if (reservation == null)
+        //        return null;
+
+        //    // Totale prenotazione = camera + extra
+        //    decimal totalReservation = (reservation.Room?.PriceForNight ?? 0)
+        //                             + reservation.Charges.Sum(c => c.Amount);
+
+        //    // Totale pagato tramite pagamenti completati
+        //    decimal totalPayments = reservation.Payments
+        //        .Where(p => p.Status == PaymentStatus.Completed)
+        //        .Sum(p => p.Amount);
+
+        //    // RemainingAmount sulla prenotazione
+        //    decimal remainingAmount = Math.Round(totalReservation - totalPayments, 2);
+
+        //    // PaymentStatus della prenotazione
+        //    ReservationPaymentStatus paymentStatus = totalPayments >= totalReservation
+        //        ? ReservationPaymentStatus.Paid
+        //        : ReservationPaymentStatus.NotPaid;
+
+        //    // Helper per full name
+        //    async Task<string?> GetUserNameAsync(string? userId)
+        //    {
+        //        if (string.IsNullOrEmpty(userId)) return null;
+        //        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        //        return user != null ? $"{user.FirstName} {user.LastName}" : "System";
+        //    }
+        //    // Map Guests con tracking completo
+        //    var guestDtos = await Task.WhenAll(reservation.Guests.Select(async g => new GuestDto
+        //    {
+        //        Id = g.Id,
+        //        FirstName = g.FirstName,
+        //        LastName = g.LastName,
+        //        BirthDate = g.BirthDate,
+        //        BirthCity = g.BirthCity,
+        //        Citizenship = g.Citizenship,
+        //        Role = g.Role.ToString(),
+        //        TaxCode = g.TaxCode,
+        //        Address = g.Address,
+        //        CityOfResidence = g.CityOfResidence,
+        //        Province = g.Province,
+        //        PostalCode = g.PostalCode,
+        //        DocumentType = g.DocumentType,
+        //        DocumentNumber = g.DocumentNumber,
+        //        DocumentExpiration = g.DocumentExpiration,
+        //        ReservationId = g.ReservationId,
+        //        CreatedBy = await GetUserNameAsync(g.CreatedBy),
+        //        CreatedAt = g.CreatedAt,
+        //        UpdatedBy = await GetUserNameAsync(g.UpdatedBy),
+        //        UpdatedAt = g.UpdatedAt,
+        //        DeletedBy = await GetUserNameAsync(g.DeletedBy),
+        //        DeletedAt = g.DeletedAt
+        //    }));
+
+        //    // Map Payments con tracking
+        //    var paymentDtos = await Task.WhenAll(reservation.Payments.Select(async p => new PaymentDto
+        //    {
+        //        Id = p.Id,
+        //        ReservationId = p.ReservationId,
+        //        Amount = p.Amount,
+        //        Type = p.Type,
+        //        Status = p.Status,
+        //        PaymentMethodId = p.PaymentMethodId,
+        //        PaymentMethodCode = p.PaymentMethod?.Code,
+        //        PaymentMethodDescription = p.PaymentMethod?.Description,
+        //        PaidAt = p.PaidAt,
+        //        CreatedBy = await GetUserNameAsync(p.CreatedBy),
+        //        CreatedAt = p.CreatedAt,
+        //        UpdatedBy = await GetUserNameAsync(p.UpdatedBy),
+        //        UpdatedAt = p.UpdatedAt,
+        //        DeletedBy = await GetUserNameAsync(p.DeletedBy),
+        //        DeletedAt = p.DeletedAt
+        //    }));
+
+        //    // Map Charges con tracking
+        //    var chargeDtos = await Task.WhenAll(reservation.Charges.Select(async c => new ChargeDto
+        //    {
+        //        Id = c.Id,
+        //        ReservationId = c.ReservationId,
+        //        Description = c.Description,
+        //        Type = c.Type.ToString(),
+        //        UnitPrice = c.UnitPrice,
+        //        VatRate = c.VatRate,
+        //        Quantity = c.Quantity,
+        //        Amount = c.Amount,
+        //        IsInvoiced = c.IsInvoiced,
+        //        CreatedBy = await GetUserNameAsync(c.CreatedBy),
+        //        CreatedAt = c.CreatedAt,
+        //        UpdatedBy = await GetUserNameAsync(c.UpdatedBy),
+        //        UpdatedAt = c.UpdatedAt,
+        //        DeletedBy = await GetUserNameAsync(c.DeletedBy),
+        //        DeletedAt = c.DeletedAt
+        //    }));
+
+        //    // Map Invoices con tracking
+        //    var invoiceDtos = await Task.WhenAll(reservation.Invoices.Select(async i => new InvoiceDto
+        //    {
+        //        Id = i.Id,
+        //        ReservationId = i.ReservationId,
+        //        InvoiceNumber = i.InvoiceNumber,
+        //        Status = i.Status,
+        //        IssueDate = i.IssueDate,
+        //        SubTotal = i.SubTotal,
+        //        TaxAmount = i.TaxAmount,
+        //        TotalAmount = i.TotalAmount,
+        //        BalanceDue = i.TotalAmount - i.InvoicePayments.Sum(p => p.AmountApplied),
+        //        RemainingAmount = i.RemainingAmount,
+        //        Customer = new InvoiceCustomerDto
+        //        {
+        //            FirstName = i.Customer.FirstName,
+        //            LastName = i.Customer.LastName,
+        //            TaxCode = i.Customer.TaxCode,
+        //            Address = i.Customer.Address,
+        //            City = i.Customer.City,
+        //            Country = i.Customer.Country
+        //        },
+        //        Items = i.Items.Select(it => new InvoiceItemDto
+        //        {
+        //            Id = it.Id,
+        //            Description = it.Description,
+        //            UnitPrice = it.UnitPrice,
+        //            Quantity = it.Quantity,
+        //            TotalPrice = it.TotalPrice,
+        //            VatRate = it.VatRate,
+        //            VatAmount = it.VatAmount
+        //        }).ToList(),
+        //        Payments = i.InvoicePayments.Select(p => new InvoicePaymentDto
+        //        {
+        //            PaymentId = p.PaymentId,
+        //            AmountApplied = p.AmountApplied,
+        //            CreatedAt = p.CreatedAt
+        //        }).ToList(),
+        //        CreatedBy = await GetUserNameAsync(i.CreatedBy),
+        //        CreatedAt = i.CreatedAt,
+        //        UpdatedBy = await GetUserNameAsync(i.UpdatedBy),
+        //        UpdatedAt = i.UpdatedAt,
+        //        DeletedBy = await GetUserNameAsync(i.DeletedBy),
+        //        DeletedAt = i.DeletedAt
+        //    }));
+        //    return new ReservationDetailDto
+        //    {
+        //        Id = reservation.Id,
+        //        CustomerName = $"{reservation.FirstName} {reservation.LastName}",
+        //        Phone = reservation.Phone,
+        //        Email = reservation.Email,
+        //        RoomId = reservation.RoomId,
+        //        RoomNumber = reservation.Room.RoomNumber,
+        //        CheckIn = reservation.CheckIn,
+        //        CheckOut = reservation.CheckOut,
+        //        Status = reservation.Status.ToString(),
+        //        Note = reservation.Note,
+        //        PaymentStatus = paymentStatus,
+        //        RemainingAmount = remainingAmount,
+        //        CreatedBy = await GetUserNameAsync(reservation.CreatedBy),
+        //        CreatedAt = reservation.CreatedAt,
+        //        UpdatedBy = await GetUserNameAsync(reservation.UpdatedBy),
+        //        UpdatedAt = reservation.UpdatedAt,
+        //        DeletedBy = await GetUserNameAsync(reservation.DeletedBy),
+        //        DeletedAt = reservation.DeletedAt,
+        //        Guests = guestDtos.ToList(),
+        //        Payments = paymentDtos.ToList(),
+        //        Charges = chargeDtos.ToList(),
+        //        Invoices = invoiceDtos.ToList()
+        //    };
+
+        //}
+        public async Task<ReservationDetailDto?> GetReservationByIdAsync(Guid reservationId)
         {
-
-            //vedere lazy loading, dovreti mettere relazioni come virtual
+            // Carica la prenotazione con relazioni
             var reservation = await _context.Reservations
-                  .Where(r => r.Id == reservationId && r.DeletedAt == null)
-                  .Include(r => r.Room)
-                  .Include(r => r.Payments)
-                      .ThenInclude(p => p.PaymentMethod)
-                  .Include(r => r.Charges)
-                  .Include(r => r.Guests)
-                  .Include(r => r.Invoices)
-                      .ThenInclude(i => i.Items)
-                  .Include(r => r.Invoices)
-                      .ThenInclude(i => i.InvoicePayments)
-                  .Include(r => r.Invoices)
-                      .ThenInclude(i => i.Customer)
-                  .FirstOrDefaultAsync();
+                .Where(r => r.Id == reservationId && r.DeletedAt == null)
+                .Include(r => r.Room)
+                .Include(r => r.Payments)
+                    .ThenInclude(p => p.PaymentMethod)
+                .Include(r => r.Charges)
+                .Include(r => r.Guests)
+                .Include(r => r.Invoices)
+                    .ThenInclude(i => i.Items)
+                .Include(r => r.Invoices)
+                    .ThenInclude(i => i.InvoicePayments)
+                .Include(r => r.Invoices)
+                    .ThenInclude(i => i.Customer)
+                .FirstOrDefaultAsync();
 
-            if (reservation == null)
-                return null;
+            if (reservation == null) return null;
 
-            // Totale prenotazione = camera + extra
-            decimal totalReservation = (reservation.Room?.PriceForNight ?? 0)
-                                     + reservation.Charges.Sum(c => c.Amount);
-
-            // Totale pagato tramite pagamenti completati
-            decimal totalPayments = reservation.Payments
-                .Where(p => p.Status == PaymentStatus.Completed)
-                .Sum(p => p.Amount);
-
-            // RemainingAmount sulla prenotazione
+            // Calcola importi
+            decimal totalReservation = (reservation.Room?.PriceForNight ?? 0) + reservation.Charges.Sum(c => c.Amount);
+            decimal totalPayments = reservation.Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount);
             decimal remainingAmount = Math.Round(totalReservation - totalPayments, 2);
+            ReservationPaymentStatus paymentStatus = totalPayments >= totalReservation ? ReservationPaymentStatus.Paid : ReservationPaymentStatus.NotPaid;
 
-            // PaymentStatus della prenotazione
-            ReservationPaymentStatus paymentStatus = totalPayments >= totalReservation
-                ? ReservationPaymentStatus.Paid
-                : ReservationPaymentStatus.NotPaid;
+            // Recupera tutti gli userId coinvolti
+            var userIds = reservation.Guests.SelectMany(g => new[] { g.CreatedBy, g.UpdatedBy, g.DeletedBy })
+                .Concat(reservation.Payments.SelectMany(p => new[] { p.CreatedBy, p.UpdatedBy, p.DeletedBy }))
+                .Concat(reservation.Charges.SelectMany(c => new[] { c.CreatedBy, c.UpdatedBy, c.DeletedBy }))
+                .Concat(reservation.Invoices.SelectMany(i => new[] { i.CreatedBy, i.UpdatedBy, i.DeletedBy }))
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Distinct()
+                .ToList();
 
-            // Helper per full name
-            async Task<string?> GetUserNameAsync(string? userId)
-            {
-                if (string.IsNullOrEmpty(userId)) return null;
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-                return user != null ? $"{user.FirstName} {user.LastName}" : "System";
-            }
-            // Map Guests con tracking completo
-            var guestDtos = await Task.WhenAll(reservation.Guests.Select(async g => new GuestDto
+            // Carica tutti gli utenti in memoria
+            var users = await _context.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => $"{u.FirstName} {u.LastName}");
+
+            // Helper sincrono per ottenere il nome dell'utente
+            string GetUserName(string? userId) => string.IsNullOrEmpty(userId) ? "System" : users.GetValueOrDefault(userId, "System");
+
+            // Mappa i Guest DTO
+            var guestDtos = reservation.Guests.Select(g => new GuestDto
             {
                 Id = g.Id,
                 FirstName = g.FirstName,
@@ -210,16 +396,16 @@ namespace BackHotelBear.Services
                 DocumentNumber = g.DocumentNumber,
                 DocumentExpiration = g.DocumentExpiration,
                 ReservationId = g.ReservationId,
-                CreatedBy = await GetUserNameAsync(g.CreatedBy),
+                CreatedBy = GetUserName(g.CreatedBy),
                 CreatedAt = g.CreatedAt,
-                UpdatedBy = await GetUserNameAsync(g.UpdatedBy),
+                UpdatedBy = GetUserName(g.UpdatedBy),
                 UpdatedAt = g.UpdatedAt,
-                DeletedBy = await GetUserNameAsync(g.DeletedBy),
+                DeletedBy = GetUserName(g.DeletedBy),
                 DeletedAt = g.DeletedAt
-            }));
+            }).ToList();
 
-            // Map Payments con tracking
-            var paymentDtos = await Task.WhenAll(reservation.Payments.Select(async p => new PaymentDto
+            // Mappa i Payment DTO
+            var paymentDtos = reservation.Payments.Select(p => new PaymentDto
             {
                 Id = p.Id,
                 ReservationId = p.ReservationId,
@@ -230,16 +416,16 @@ namespace BackHotelBear.Services
                 PaymentMethodCode = p.PaymentMethod?.Code,
                 PaymentMethodDescription = p.PaymentMethod?.Description,
                 PaidAt = p.PaidAt,
-                CreatedBy = await GetUserNameAsync(p.CreatedBy),
+                CreatedBy = GetUserName(p.CreatedBy),
                 CreatedAt = p.CreatedAt,
-                UpdatedBy = await GetUserNameAsync(p.UpdatedBy),
+                UpdatedBy = GetUserName(p.UpdatedBy),
                 UpdatedAt = p.UpdatedAt,
-                DeletedBy = await GetUserNameAsync(p.DeletedBy),
+                DeletedBy = GetUserName(p.DeletedBy),
                 DeletedAt = p.DeletedAt
-            }));
+            }).ToList();
 
-            // Map Charges con tracking
-            var chargeDtos = await Task.WhenAll(reservation.Charges.Select(async c => new ChargeDto
+            // Mappa i Charge DTO
+            var chargeDtos = reservation.Charges.Select(c => new ChargeDto
             {
                 Id = c.Id,
                 ReservationId = c.ReservationId,
@@ -250,16 +436,16 @@ namespace BackHotelBear.Services
                 Quantity = c.Quantity,
                 Amount = c.Amount,
                 IsInvoiced = c.IsInvoiced,
-                CreatedBy = await GetUserNameAsync(c.CreatedBy),
+                CreatedBy = GetUserName(c.CreatedBy),
                 CreatedAt = c.CreatedAt,
-                UpdatedBy = await GetUserNameAsync(c.UpdatedBy),
+                UpdatedBy = GetUserName(c.UpdatedBy),
                 UpdatedAt = c.UpdatedAt,
-                DeletedBy = await GetUserNameAsync(c.DeletedBy),
+                DeletedBy = GetUserName(c.DeletedBy),
                 DeletedAt = c.DeletedAt
-            }));
+            }).ToList();
 
-            // Map Invoices con tracking
-            var invoiceDtos = await Task.WhenAll(reservation.Invoices.Select(async i => new InvoiceDto
+            // Mappa gli Invoice DTO
+            var invoiceDtos = reservation.Invoices.Select(i => new InvoiceDto
             {
                 Id = i.Id,
                 ReservationId = i.ReservationId,
@@ -269,9 +455,9 @@ namespace BackHotelBear.Services
                 SubTotal = i.SubTotal,
                 TaxAmount = i.TaxAmount,
                 TotalAmount = i.TotalAmount,
-                BalanceDue = i.TotalAmount - i.InvoicePayments.Sum(p => p.AmountApplied),
+                BalanceDue = i.TotalAmount - (i.InvoicePayments?.Sum(p => p.AmountApplied) ?? 0),
                 RemainingAmount = i.RemainingAmount,
-                Customer = new InvoiceCustomerDto
+                Customer = i.Customer != null ? new InvoiceCustomerDto
                 {
                     FirstName = i.Customer.FirstName,
                     LastName = i.Customer.LastName,
@@ -279,8 +465,8 @@ namespace BackHotelBear.Services
                     Address = i.Customer.Address,
                     City = i.Customer.City,
                     Country = i.Customer.Country
-                },
-                Items = i.Items.Select(it => new InvoiceItemDto
+                } : null,
+                Items = i.Items?.Select(it => new InvoiceItemDto
                 {
                     Id = it.Id,
                     Description = it.Description,
@@ -289,20 +475,22 @@ namespace BackHotelBear.Services
                     TotalPrice = it.TotalPrice,
                     VatRate = it.VatRate,
                     VatAmount = it.VatAmount
-                }).ToList(),
-                Payments = i.InvoicePayments.Select(p => new InvoicePaymentDto
+                }).ToList() ?? new List<InvoiceItemDto>(),
+                Payments = i.InvoicePayments?.Select(p => new InvoicePaymentDto
                 {
                     PaymentId = p.PaymentId,
                     AmountApplied = p.AmountApplied,
                     CreatedAt = p.CreatedAt
-                }).ToList(),
-                CreatedBy = await GetUserNameAsync(i.CreatedBy),
+                }).ToList() ?? new List<InvoicePaymentDto>(),
+                CreatedBy = GetUserName(i.CreatedBy),
                 CreatedAt = i.CreatedAt,
-                UpdatedBy = await GetUserNameAsync(i.UpdatedBy),
+                UpdatedBy = GetUserName(i.UpdatedBy),
                 UpdatedAt = i.UpdatedAt,
-                DeletedBy = await GetUserNameAsync(i.DeletedBy),
+                DeletedBy = GetUserName(i.DeletedBy),
                 DeletedAt = i.DeletedAt
-            }));
+            }).ToList();
+
+            // Costruisci il DTO finale della prenotazione
             return new ReservationDetailDto
             {
                 Id = reservation.Id,
@@ -310,27 +498,25 @@ namespace BackHotelBear.Services
                 Phone = reservation.Phone,
                 Email = reservation.Email,
                 RoomId = reservation.RoomId,
-                RoomNumber = reservation.Room.RoomNumber,
+                RoomNumber = reservation.Room?.RoomNumber,
                 CheckIn = reservation.CheckIn,
                 CheckOut = reservation.CheckOut,
                 Status = reservation.Status.ToString(),
                 Note = reservation.Note,
                 PaymentStatus = paymentStatus,
                 RemainingAmount = remainingAmount,
-                CreatedBy = await GetUserNameAsync(reservation.CreatedBy),
+                CreatedBy = GetUserName(reservation.CreatedBy),
                 CreatedAt = reservation.CreatedAt,
-                UpdatedBy = await GetUserNameAsync(reservation.UpdatedBy),
+                UpdatedBy = GetUserName(reservation.UpdatedBy),
                 UpdatedAt = reservation.UpdatedAt,
-                DeletedBy = await GetUserNameAsync(reservation.DeletedBy),
+                DeletedBy = GetUserName(reservation.DeletedBy),
                 DeletedAt = reservation.DeletedAt,
-                Guests = guestDtos.ToList(),
-                Payments = paymentDtos.ToList(),
-                Charges = chargeDtos.ToList(),
-                Invoices = invoiceDtos.ToList()
+                Guests = guestDtos,
+                Payments = paymentDtos,
+                Charges = chargeDtos,
+                Invoices = invoiceDtos
             };
-
         }
-
         public async Task<List<ReservationListDto>> SearchReservationAsync(ReservationSearchDto dto)
         {
             var query = _context.Reservations

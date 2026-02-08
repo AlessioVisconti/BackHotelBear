@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace BackHotelBear.Models.Entity.RoomAndRoomPhotos
 {
@@ -9,6 +10,7 @@ namespace BackHotelBear.Models.Entity.RoomAndRoomPhotos
         public string Url { get; set; } = null!;
         public bool IsCover { get; set; } = false;
         public Guid RoomId { get; set; }
+        [JsonIgnore]
         public Room Room { get; set; } = null!;
     }
 }

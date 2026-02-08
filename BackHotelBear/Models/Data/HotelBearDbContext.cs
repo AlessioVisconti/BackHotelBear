@@ -55,6 +55,13 @@ namespace BackHotelBear.Models.Data
             }
             return await base.SaveChangesAsync(cancellationToken);
         }
+        public async Task<int> HardDeleteAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default) where TEntity : class
+        {
+            
+            Entry(entity).State = EntityState.Deleted;
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

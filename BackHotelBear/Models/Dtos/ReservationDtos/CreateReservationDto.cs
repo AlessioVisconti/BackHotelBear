@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BackHotelBear.Models.Dtos.ReservationDtos
 {
@@ -18,6 +19,9 @@ namespace BackHotelBear.Models.Dtos.ReservationDtos
         public DateTime CheckIn { get; set; }
         [Required]
         public DateTime CheckOut { get; set; }
+        [Required]
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal Price { get; set; }
         [MaxLength(150)]
         public string? Note { get; set; }
     }
