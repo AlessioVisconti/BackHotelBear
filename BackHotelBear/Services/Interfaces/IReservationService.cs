@@ -7,7 +7,7 @@ namespace BackHotelBear.Services.Interfaces
         Task<ReservationResult> CreateReservationAsync(CreateReservationDto dto, string? customerId = null);
         Task<ReservationResult> UpdateReservationAsync(Guid reservationId, UpdateReservationDto dtop, string? modifiedByUserId);
         Task<ReservationDetailDto> GetReservationByIdAsync(Guid reservationId);
-        Task<ReservationResult> CancelReservationAsync(Guid reservationId, string? cancelledByUserId = null);//soft delete
+        Task<ReservationResult> CancelReservationAsync(Guid reservationId, string? cancelledByUserId = null);
         Task<List<ReservationListDto>> SearchReservationAsync(ReservationSearchDto dto);
     }
 }

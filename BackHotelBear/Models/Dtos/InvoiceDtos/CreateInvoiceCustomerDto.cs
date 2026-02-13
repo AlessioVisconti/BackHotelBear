@@ -9,7 +9,7 @@ namespace BackHotelBear.Models.Dtos.InvoiceDtos
         [Required,MaxLength(50)]
         public string LastName { get; set; } = null!;
         [Required]
-        [StringLength(16, MinimumLength = 16, ErrorMessage = "Il Codice Fiscale deve contenere esattamente 16 caratteri")]
+        [StringLength(16, MinimumLength = 16, ErrorMessage = "The tax code must contain exactly 16 characters")]
         public string? TaxCode { get; set; }
         [MaxLength(5)]
         public string? VatNumber { get; set; }

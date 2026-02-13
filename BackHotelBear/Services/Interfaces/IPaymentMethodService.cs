@@ -8,6 +8,5 @@ namespace BackHotelBear.Services.Interfaces
         Task<PaymentMethodDto> CreateAsync(CreatePaymentMethodDto dto);
         Task<PaymentMethodDto> UpdateAsync(Guid id,UpdatePaymentMethodDto dto);
         Task<bool> DeactivateAsync(Guid id);
-        //ci sto ancora ragionando su, probabilmente non faccio un Deactivate ma semplicemente tramite l'update decido se tenere il metodo o disattivarlo.
     }
 }

@@ -2,6 +2,6 @@
 {
     public class GuestResearchDto
     {
-        public string Name { get; set; }//nome o cognome
+        public string Name { get; set; }
     }
 }

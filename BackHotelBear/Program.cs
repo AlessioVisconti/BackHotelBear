@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,21 +18,16 @@ builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
     {
-        //Enum come stringhe
+        //Enums as strings
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter()
         );
-
-        //Supporto camel/pascalCase
-        //options.JsonSerializerOptions.PropertyNamingPolicy =
-        //    JsonNamingPolicy.CamelCase;
-
-        //options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 // Database configuration
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<HotelBearDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Identity configuration
 builder.Services.AddIdentity<User, IdentityRole>(options =>
@@ -57,6 +51,7 @@ builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<InvoicePdfService>();
 
 // JWT configuration
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -102,7 +97,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Hotel Bear Api",
         Version = "v1",
-        Description = "API per la gestione di un hotel"
+        Description = "API for hotel management"
     });
 
     // JWT Authentication in Swagger
@@ -113,7 +108,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Inserisci qui il token JWT ottenuto dal login"
+        Description = "Enter the JWT token obtained from the login here"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -143,6 +138,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseCors("AllowAll");
 

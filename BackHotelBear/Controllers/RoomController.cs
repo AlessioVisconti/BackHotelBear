@@ -17,16 +17,16 @@ namespace BackHotelBear.Controllers
             _roomService = roomService;
         }
 
-        //CREATE
+        //CREATE-Used
         [HttpPost]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateRoomDto dto)
         {
             var room = await _roomService.CreateRoomAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = room.Id }, room);
         }
 
-        //UPDATE
+        //UPDATE-Used
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateRoomDto dto)
@@ -39,12 +39,11 @@ namespace BackHotelBear.Controllers
             }
             catch (Exception ex)
             {
-                // ritorna messaggio reale per debug
                 return StatusCode(500, ex.Message);
             }
         }
 
-        //DELETE
+        //DELETE-Used
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
@@ -53,7 +52,7 @@ namespace BackHotelBear.Controllers
             if (!deleted) return NotFound();
             return NoContent();
         }
-        //GET
+        //GET-Used
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetById(Guid id)
@@ -63,6 +62,7 @@ namespace BackHotelBear.Controllers
             return Ok(room);
         }
 
+        //GET-Used
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAll()
@@ -70,7 +70,7 @@ namespace BackHotelBear.Controllers
             var rooms = await _roomService.GetAllRoomsAsync();
             return Ok(rooms);
         }
-        //usato
+        //Used
         [HttpGet("calendar")]
         [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
         public async Task<ActionResult<List<RoomCalendarDto>>> GetRoomCalendar(
@@ -80,18 +80,21 @@ namespace BackHotelBear.Controllers
             var result = await _roomService.GetRoomCalendarAsync(startDate, endDate);
             return Ok(result);
         }
-
-        [HttpGet("calendar/check")]
-        public async Task<ActionResult<RoomDayClickResultDto>> CheckRoomDay(Guid roomId, DateTime day)
+        //Used
+        [HttpGet("available")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAvailableRooms([FromQuery] DateTime checkIn,[FromQuery] DateTime checkOut)
         {
-            var result = await _roomService
-                .CheckRoomAvailabilityAsync(roomId, day);
+            if (checkIn >= checkOut)
+                return BadRequest("Check-out must be after check-in.");
 
-            return Ok(result);
+            var rooms = await _roomService.GetAvailableRoomsAsync(checkIn, checkOut);
+
+            return Ok(rooms);
         }
 
         //FOTO
-        //CREATE(ADD)
+        //CREATE(ADD)-Used
         [HttpPost("{id}/photos")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddPhoto(Guid id, [FromForm] AddRoomPhotoDto dto)
@@ -100,7 +103,7 @@ namespace BackHotelBear.Controllers
             return Ok();
         }
 
-        //DELETE
+        //DELETE-Used
         [HttpDelete("photos/{photoId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeletePhoto(Guid photoId)
@@ -110,7 +113,7 @@ namespace BackHotelBear.Controllers
             return NoContent();
         }
 
-        // SET COVER PHOTO
+        // SET COVER PHOTO-Used
         [HttpPatch("photos/{photoId}/cover")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> SetCover(Guid photoId)

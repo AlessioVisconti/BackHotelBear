@@ -18,7 +18,7 @@ namespace BackHotelBear.Controllers
             _authService = authService;
         }
 
-        //REGISTER CUSTOMER
+        //REGISTER CUSTOMER-used
         [HttpPost("register/customer")]
         [AllowAnonymous]
         public async Task<IActionResult> RegisterCustomer([FromBody] RegisterCustomerDto dto)
@@ -29,12 +29,12 @@ namespace BackHotelBear.Controllers
             var result = await _authService.RegisterCustomerAsync(dto);
 
             if (result == null)
-                return BadRequest(new { message = "Email già esistente" });
+                return BadRequest(new { message = "Email already exists" });
 
             return Ok(result);
         }
 
-        //LOGIN
+        //LOGIN-used
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
@@ -45,12 +45,12 @@ namespace BackHotelBear.Controllers
             var result = await _authService.LoginAsync(dto);
 
             if (result == null)
-                return Unauthorized(new { message = "Credenziali non valide o account disattivato" });
+                return Unauthorized(new { message = "Invalid credentials or account deactivated" });
 
             return Ok(result);
         }
 
-        //REGISTER STAFF
+        //REGISTER STAFF-used
         [HttpPost("register/staff")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegisterStaff([FromBody] CreateStaffUserDto dto)
@@ -61,12 +61,12 @@ namespace BackHotelBear.Controllers
             var result = await _authService.RegisterStaffAsync(dto);
 
             if (result == null)
-                return BadRequest(new { message = "Errore nella creazione dell'account staff" });
+                return BadRequest(new { message = "Error creating staff account" });
 
             return Ok(result);
         }
 
-        //GET
+        //GET-For future
         [HttpGet("customers")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllCustomers()
@@ -74,7 +74,7 @@ namespace BackHotelBear.Controllers
             var users = await _authService.GetAllCustomersAsync();
             return Ok(users);
         }
-
+        //Get Staff-used
         [HttpGet("staff")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllStaff()
@@ -83,7 +83,7 @@ namespace BackHotelBear.Controllers
             return Ok(users);
         }
 
-        //SOFT DELETE CUSTOMER
+        //SOFT DELETE CUSTOMER-For future
         [HttpPut("customers/{id}/deactivate")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeactivateCustomer(string id)
@@ -95,7 +95,7 @@ namespace BackHotelBear.Controllers
 
             return NoContent();
         }
-
+        //REACTIVATE CUSTOMER-For future
         [HttpPut("customers/{id}/reactivate")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ReactivateCustomer(string id)
@@ -108,7 +108,7 @@ namespace BackHotelBear.Controllers
             return NoContent();
         }
 
-        //SOFT DELETE STAFF
+        //SOFT DELETE STAFF-Used
         [HttpPut("staff/{id}/deactivate")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeactivateStaff(string id)
@@ -120,7 +120,7 @@ namespace BackHotelBear.Controllers
 
             return NoContent();
         }
-
+        //REACTIVATE STAFF-USED
         [HttpPut("staff/{id}/reactivate")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ReactivateStaff(string id)
@@ -133,7 +133,7 @@ namespace BackHotelBear.Controllers
             return NoContent();
         }
 
-        //DELETE USER
+        //DELETE USER-For future
         [HttpDelete("users/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string id)
@@ -146,7 +146,7 @@ namespace BackHotelBear.Controllers
             return NoContent();
         }
 
-        //CHANGE PASSWORD
+        //CHANGE PASSWORD-For future
         [HttpPut("change-password")]
         [Authorize]
         public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
@@ -167,8 +167,9 @@ namespace BackHotelBear.Controllers
 
             return NoContent();
         }
-
+        //Forgot Password-For future
         [HttpPost("forgot-password")]
+        [Authorize]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
         {
             if (!ModelState.IsValid)
@@ -185,7 +186,7 @@ namespace BackHotelBear.Controllers
                 token = token
             });
         }
-
+        //Reset Password-For future
         [HttpPost("reset-password")]
         [AllowAnonymous]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
@@ -200,7 +201,7 @@ namespace BackHotelBear.Controllers
             );
 
             if (!success)
-                return BadRequest(new { message = "Token non valido o scaduto" });
+                return BadRequest(new { message = "Invalid or expired token" });
 
             return NoContent();
         }

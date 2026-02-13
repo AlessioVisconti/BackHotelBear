@@ -17,7 +17,7 @@ namespace BackHotelBear.Controllers
             _guestService = guestService;
         }
 
-        //CREATE
+        //CREATE-Used
         [HttpPost]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> CreateGuest([FromBody] GuestDto dto)
@@ -30,7 +30,7 @@ namespace BackHotelBear.Controllers
             return Ok(result.Guest);
         }
 
-        //UPDATE
+        //UPDATE-Used
         [HttpPut("{id:guid}")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> UpdateGuest(Guid id, [FromBody] GuestDto dto)
@@ -43,7 +43,7 @@ namespace BackHotelBear.Controllers
             return Ok(result.Guest);
         }
 
-        //DELETE
+        //DELETE-Used
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> DeleteGuest(Guid id)
@@ -54,15 +54,6 @@ namespace BackHotelBear.Controllers
                 return NotFound(new { result.ErrorMessage });
 
             return NoContent();
-        }
-
-        //GET
-        [HttpPost("search")]
-        [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
-        public async Task<IActionResult> SearchGuests([FromBody] GuestResearchDto dto)
-        {
-            var guests = await _guestService.SearchGuestAsync(dto);
-            return Ok(guests);
         }
     }
 }

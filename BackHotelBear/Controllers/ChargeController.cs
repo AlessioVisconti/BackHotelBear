@@ -1,5 +1,6 @@
 ﻿using BackHotelBear.Models.Dtos.ChargeDtos;
 using BackHotelBear.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +19,7 @@ namespace BackHotelBear.Controllers
 
         //CREATE-USATO
         [HttpPost]
+        [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
         public async Task<IActionResult> Create([FromBody] ChargeDto dto)
         {
             try
@@ -37,6 +39,7 @@ namespace BackHotelBear.Controllers
 
         //UPDATE-USATO
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
         public async Task<IActionResult> Update(Guid id, [FromBody] ChargeDto dto)
         {
             try
@@ -56,6 +59,7 @@ namespace BackHotelBear.Controllers
 
         //DELETE-USATO
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

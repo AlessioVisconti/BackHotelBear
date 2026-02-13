@@ -14,6 +14,7 @@ namespace BackHotelBear.Models.Dtos.ReservationDtos
         public List<ChargeDto> Charges { get; set; } = new();
         public List<GuestDto> Guests { get; set; } = new();
         public List<InvoiceDto> Invoices { get; set; } = new();
+        public bool IsRoomInvoiced { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? CreatedAt { get; set; }
         public string? UpdatedBy { get; set; }

@@ -17,7 +17,7 @@ namespace BackHotelBear.Controllers
             _reservationService = reservationService;
         }
 
-        //CREATE-USATO
+        //CREATE-USED
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> CreateReservation([FromBody] CreateReservationDto dto)
@@ -41,12 +41,12 @@ namespace BackHotelBear.Controllers
             return CreatedAtAction(nameof(GetReservationById), new { id = result.Reservation!.Id }, result.Reservation);
         }
 
-        //UPDATE-USATO
+        //UPDATE-USED
         [HttpPut("{id:guid}")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> UpdateReservation(Guid id, [FromBody] UpdateReservationDto dto)
         {
-            var userId = User.Identity?.Name; // traccia chi modifica
+            var userId = User.Identity?.Name;
 
             var result = await _reservationService.UpdateReservationAsync(id, dto, userId);
 
@@ -56,7 +56,7 @@ namespace BackHotelBear.Controllers
             return Ok(result.Reservation);
         }
 
-        //GET-USATO
+        //GET-USED
         [HttpGet("{id:guid}")]
         [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
         public async Task<IActionResult> GetReservationById(Guid id)
@@ -69,7 +69,7 @@ namespace BackHotelBear.Controllers
             return Ok(reservation);
         }
 
-        //SOFT DELETE-USATO
+        //SOFT DELETE-USED
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> CancelReservation(Guid id)
@@ -84,7 +84,7 @@ namespace BackHotelBear.Controllers
             return NoContent();
         }
 
-        //SEARCH-USATO
+        //SEARCH-USED
         [HttpPost("search")]
         [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
         public async Task<IActionResult> SearchReservations([FromBody] ReservationSearchDto dto)
@@ -93,6 +93,6 @@ namespace BackHotelBear.Controllers
             return Ok(reservations);
         }
 
-        //Aggiungere metodo per fare al get di tutte le soft-delete + aggiungere hard delete per quelle.
+        //for future: Add method to get all soft-deletes + add hard delete for those.
     }
 }

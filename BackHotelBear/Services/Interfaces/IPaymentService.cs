@@ -6,7 +6,6 @@ namespace BackHotelBear.Services.Interfaces
     {
         Task<PaymentDto?> CreatePaymentAsync(CreatePaymentDto dto);
         Task<PaymentDto?> UpdatePaymentAsync(Guid id, UpdatePaymentDto dto);
-        Task<bool> DeletePaymentAsync(Guid paymentid);//soft delete
-        Task<List<PaymentDto>> GetAllPaymentsAsync();
+        Task<bool> DeletePaymentAsync(Guid paymentid);
     }
 }

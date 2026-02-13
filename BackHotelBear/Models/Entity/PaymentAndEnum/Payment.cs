@@ -29,6 +29,7 @@ namespace BackHotelBear.Models.Entity.PaymentAndEnum
         public Guid PaymentMethodId { get; set; }
         public PaymentMethod PaymentMethod { get; set; } = null!;
         public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
+        public bool IsInvoiced { get; set; }
         public DateTime? PaidAt { get; set; }
     }
 }

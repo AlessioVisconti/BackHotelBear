@@ -100,40 +100,9 @@ namespace BackHotelBear.Services
             var guest = await _context.Guests.FirstOrDefaultAsync(g => g.Id == guestId);
             if (guest == null)
                 return new GuestResult { Success = false, ErrorMessage = "Guest not found" };
-
-            // Esegui hard delete
             await _context.HardDeleteAsync(guest);
 
             return new GuestResult { Success = true };
-        }
-
-        public async Task<List<GuestDto>> SearchGuestAsync(GuestResearchDto dto)
-        {
-            var query = _context.Guests.Where(g => g.DeletedAt == null);
-            if (!string.IsNullOrWhiteSpace(dto.Name))
-                query = query.Where(g => g.FirstName.Contains(dto.Name) || g.LastName.Contains(dto.Name));
-
-            return await query
-                .Select(g => new GuestDto
-                {
-                    Id = g.Id,
-                    FirstName = g.FirstName,
-                    LastName = g.LastName,
-                    BirthDate = g.BirthDate,
-                    BirthCity = g.BirthCity,
-                    Citizenship = g.Citizenship,
-                    Role = g.Role.ToString(),
-                    TaxCode = g.TaxCode,
-                    Address = g.Address,
-                    CityOfResidence = g.CityOfResidence,
-                    Province = g.Province,
-                    PostalCode = g.PostalCode,
-                    DocumentType = g.DocumentType,
-                    DocumentNumber = g.DocumentNumber,
-                    DocumentExpiration = g.DocumentExpiration,
-                    ReservationId = g.ReservationId
-                })
-                .ToListAsync();
         }
 
         private async Task<GuestDto> MapToDto(Guest guest)

@@ -17,7 +17,7 @@ namespace BackHotelBear.Models.Entity.GuestAndEnum
         [Required, MaxLength(50)]
         public string Citizenship { get; set; } = null!;
         public GuestRole Role { get; set; }
-        [StringLength(16, MinimumLength = 16, ErrorMessage = "Il Codice Fiscale deve contenere esattamente 16 caratteri")]
+        [StringLength(16, MinimumLength = 16, ErrorMessage = "The tax code must contain exactly 16 characters")]
         public string? TaxCode { get; set; }
         public string? Address { get; set; }
         public string? CityOfResidence { get; set; }

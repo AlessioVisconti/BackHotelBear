@@ -17,7 +17,7 @@ namespace BackHotelBear.Services
             Directory.CreateDirectory(_uploadsFolder);
         }
 
-        //CAMERE
+        //ROOM
         public async Task<Room> CreateRoomAsync(CreateRoomDto dto)
         {
             var room = new Room
@@ -60,6 +60,7 @@ namespace BackHotelBear.Services
             await _context.SaveChangesAsync();
             return room;
         }
+        //DELETE(ROOM AND PHOTO)
         public async Task<bool> DeleteRoomAsync(Guid roomId)
         {
             var room = await _context.Rooms
@@ -68,7 +69,6 @@ namespace BackHotelBear.Services
 
             if (room == null) return false;
 
-            //Elimina foto fisiche
             foreach (var photo in room.Photos)
             {
                 var filePath = Path.Combine(_uploadsFolder, Path.GetFileName(photo.Url));
@@ -76,70 +76,15 @@ namespace BackHotelBear.Services
                     File.Delete(filePath);
             }
 
-            //Elimina foto dal DB
             _context.RoomPhotos.RemoveRange(room.Photos);
 
-            //Elimina stanza
             _context.Rooms.Remove(room);
 
             await _context.SaveChangesAsync();
             return true;
         }
 
-        //FOTO
-        public async Task AddRoomPhotoAsync(Guid roomId, AddRoomPhotoDto dto)
-        {
-            var room = await _context.Rooms
-            .Include(r => r.Photos)
-            .FirstOrDefaultAsync(r => r.Id == roomId);
 
-            if (room == null)
-                throw new Exception("Room not found");
-
-            // controlla estensione file
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-            var ext = Path.GetExtension(dto.File.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(ext))
-                throw new Exception("File type not allowed");
-
-            var fileName = $"{Guid.NewGuid()}{ext}";
-            var filePath = Path.Combine(_uploadsFolder, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await dto.File.CopyToAsync(stream);
-            }
-
-            var photoUrl = $"/uploads/rooms/{fileName}";
-
-            if (dto.IsCover)
-                foreach (var p in room.Photos)
-                    p.IsCover = false;
-
-            var photo = new RoomPhoto
-            {
-                RoomId = roomId,
-                Url = photoUrl,
-                IsCover = dto.IsCover
-            };
-
-            room.Photos.Add(photo);
-            await _context.SaveChangesAsync();
-        }
-        public async Task<bool> DeleteRoomPhotoAsync(Guid photoId)
-        {
-            var photo = await _context.RoomPhotos.FindAsync(photoId);
-            if (photo == null) return false;
-
-            var filePath = Path.Combine(_uploadsFolder, Path.GetFileName(photo.Url));
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-
-            _context.RoomPhotos.Remove(photo);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-        //QUI CI SONO LE VARIE GET
         public async Task<List<RoomListDto>> GetAllRoomsAsync()
         {
             return await _context.Rooms
@@ -157,6 +102,7 @@ namespace BackHotelBear.Services
             })
             .ToListAsync();
         }
+
         public async Task<RoomDetailDto?> GetRoomDetailAsync(Guid roomId)
         {
             var room = await _context.Rooms
@@ -182,7 +128,7 @@ namespace BackHotelBear.Services
                 }).ToList()
             };
         }
-        //usato
+
         public async Task<List<RoomCalendarDto>> GetRoomCalendarAsync(
     DateTime? startDate = null,
     DateTime? endDate = null)
@@ -253,6 +199,42 @@ namespace BackHotelBear.Services
             return result;
         }
 
+        public async Task<List<RoomListDto>> GetAvailableRoomsAsync(DateTime checkIn, DateTime checkOut)
+        {
+            checkIn = checkIn.Date;
+            checkOut = checkOut.Date;
+
+            // find occupied rooms in range
+            var occupiedRoomIds = await _context.Reservations
+                .Where(r =>
+                    r.DeletedAt == null &&
+                    r.CheckIn < checkOut &&
+                    r.CheckOut > checkIn
+                )
+                .Select(r => r.RoomId)
+                .Distinct()
+                .ToListAsync();
+
+            // returns only those not occupied
+            return await _context.Rooms
+                .Include(r => r.Photos)
+                .Where(r => !occupiedRoomIds.Contains(r.Id))
+                .Select(r => new RoomListDto
+                {
+                    Id = r.Id,
+                    RoomNumber = r.RoomNumber,
+                    RoomName = r.RoomName,
+                    Description = r.Description,
+                    Beds = r.Beds,
+                    BedsTypes = r.BedsTypes,
+                    PriceForNight = r.PriceForNight,
+                    CoverPhotoUrl = r.Photos
+                        .Where(p => p.IsCover)
+                        .Select(p => p.Url)
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
+        }
 
         public async Task<List<RoomAvailabilityDto>> GetRoomOccupiedDatesAsync(Guid roomId)
         {
@@ -265,34 +247,46 @@ namespace BackHotelBear.Services
             })
             .ToListAsync();
         }
-        public async Task<RoomDayClickResultDto> CheckRoomAvailabilityAsync(Guid roomId, DateTime day)
+        
+        //PHOTO
+        public async Task AddRoomPhotoAsync(Guid roomId, AddRoomPhotoDto dto)
         {
-            var date = day.Date;
+            var room = await _context.Rooms
+            .Include(r => r.Photos)
+            .FirstOrDefaultAsync(r => r.Id == roomId);
 
-            var reservationId = await _context.Reservations
-                .Where(r =>
-                    r.RoomId == roomId &&
-                    r.DeletedAt == null &&
-                    r.CheckIn <= date &&
-                    r.CheckOut > date
-                )
-                .Select(r => r.Id)
-                .FirstOrDefaultAsync();
+            if (room == null)
+                throw new Exception("Room not found");
 
-            if (reservationId == Guid.Empty)
+            // check file extension
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var ext = Path.GetExtension(dto.File.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(ext))
+                throw new Exception("File type not allowed");
+
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var filePath = Path.Combine(_uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                return new RoomDayClickResultDto
-                {
-                    IsOccupied = false,
-                    ReservationId = null
-                };
+                await dto.File.CopyToAsync(stream);
             }
 
-            return new RoomDayClickResultDto
+            var photoUrl = $"/uploads/rooms/{fileName}";
+
+            if (dto.IsCover)
+                foreach (var p in room.Photos)
+                    p.IsCover = false;
+
+            var photo = new RoomPhoto
             {
-                IsOccupied = true,
-                ReservationId = reservationId
+                RoomId = roomId,
+                Url = photoUrl,
+                IsCover = dto.IsCover
             };
+
+            room.Photos.Add(photo);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> SetCoverPhotoAsync(Guid photoId)
@@ -304,16 +298,27 @@ namespace BackHotelBear.Services
 
             if (photo == null) return false;
 
-            // reset tutte le cover della stanza
             foreach (var p in photo.Room.Photos)
                 p.IsCover = false;
 
-            // imposta questa come cover
             photo.IsCover = true;
 
             await _context.SaveChangesAsync();
             return true;
         }
 
+        public async Task<bool> DeleteRoomPhotoAsync(Guid photoId)
+        {
+            var photo = await _context.RoomPhotos.FindAsync(photoId);
+            if (photo == null) return false;
+
+            var filePath = Path.Combine(_uploadsFolder, Path.GetFileName(photo.Url));
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+
+            _context.RoomPhotos.Remove(photo);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

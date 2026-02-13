@@ -62,8 +62,6 @@ namespace BackHotelBear.Services
             if (existingEmail != null)
                 return null;
 
-            /*Qui ho deciso di forzare il ruolo a Customer perchè questa sarà laa registrazione(come anche da nome) solo per i clienti.
-              Quindi non avrebbe senso(oltre che non deve essere concesso) ai clienti di mettersi il ruolo loro stessi.*/
             var user = new User
             {
                 UserName = dto.Email,
@@ -97,7 +95,6 @@ namespace BackHotelBear.Services
                     int.Parse(_configuration["JwtSettings:ExpirationMinutes"]!))
             };
         }
-        //USATO
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
 
@@ -284,7 +281,6 @@ namespace BackHotelBear.Services
             return result.Succeeded;
         }
 
-        //Qui è quando l'utente da loggato vuole cambiare password
         public async Task<bool> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
         {
             var user = await _userManager.FindByIdAsync(userId);

@@ -67,13 +67,12 @@ namespace BackHotelBear.Models.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Da Invoce a Reservation
             modelBuilder.Entity<Invoice>()
                 .HasOne(i => i.Reservation)
                 .WithMany(r => r.Invoices)
                 .HasForeignKey(i => i.ReservationId)
                 .OnDelete(DeleteBehavior.Restrict);
-            //Da Invoice a Customer
+
             modelBuilder.Entity<Invoice>()
                 .HasOne(i => i.Customer)
                 .WithOne(c => c.Invoice)

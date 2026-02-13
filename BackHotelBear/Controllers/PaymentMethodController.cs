@@ -17,7 +17,7 @@ namespace BackHotelBear.Controllers
             _service = service;
         }
 
-        //GET
+        //GET-Used
         [HttpGet]
         [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
         public async Task<IActionResult> GetAll([FromQuery] bool includeInactive = false)
@@ -26,7 +26,7 @@ namespace BackHotelBear.Controllers
             return Ok(methods);
         }
 
-        //CREATE
+        //CREATE-Used
         [HttpPost]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Create([FromBody] CreatePaymentMethodDto dto)
@@ -37,7 +37,7 @@ namespace BackHotelBear.Controllers
             return Ok(method);
         }
 
-        //UPDATE
+        //UPDATE-Used
         [HttpPut("{id:guid}")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePaymentMethodDto dto)
@@ -48,7 +48,7 @@ namespace BackHotelBear.Controllers
             return Ok(method);
         }
 
-        //DEACTIVAZE
+        //DEACTIVAZE-Used
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Deactivate(Guid id)

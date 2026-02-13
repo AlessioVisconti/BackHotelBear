@@ -17,7 +17,7 @@ namespace BackHotelBear.Controllers
             _service = service;
         }
 
-        //CREATE
+        //CREATE-Used
         [HttpPost]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Create([FromBody] CreatePaymentDto dto)
@@ -34,7 +34,7 @@ namespace BackHotelBear.Controllers
 
         }
 
-        //UPDATE
+        //UPDATE-Used
         [HttpPut("{id:guid}")]
         [Authorize(Roles = "Admin,Receptionist")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePaymentDto dto)
@@ -51,7 +51,7 @@ namespace BackHotelBear.Controllers
             }
         }
 
-        //DELETE
+        //DELETE-Used
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
@@ -59,15 +59,6 @@ namespace BackHotelBear.Controllers
             var success = await _service.DeletePaymentAsync(id);
             if (!success) return NotFound();
             return NoContent();
-        }
-
-        //GET
-        [HttpGet]
-        [Authorize(Roles = "Admin,Receptionist,RoomStaff")]
-        public async Task<IActionResult> GetAll()
-        {
-            var payments = await _service.GetAllPaymentsAsync();
-            return Ok(payments);
         }
     }
 }

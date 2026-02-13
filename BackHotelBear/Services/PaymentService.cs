@@ -16,7 +16,6 @@ namespace BackHotelBear.Services
 
         public async Task<PaymentDto?> CreatePaymentAsync(CreatePaymentDto dto)
         {
-            //faccio alcuni controlli, metodi valid, importo sopra allo 0
             var reservation = await _context.Reservations
                 .FirstOrDefaultAsync(r => r.Id == dto.ReservationId && r.DeletedAt == null);
             if (reservation == null)
@@ -30,15 +29,14 @@ namespace BackHotelBear.Services
             if (dto.Amount <= 0)
                 throw new ArgumentException("Amount must be greater than zero.");
 
-            //creo il payment
             var payment = new Payment
             {
                 ReservationId = dto.ReservationId,
                 Amount = dto.Amount,
                 Type = dto.Type,
                 PaymentMethodId = dto.PaymentMethodId,
-                Status = dto.PaidAt.HasValue ? PaymentStatus.Completed : PaymentStatus.Pending, // se PaidAt presente, lo segno completato
-                PaidAt = dto.PaidAt, // eventualmente passato dalla richiesta
+                Status = dto.PaidAt.HasValue ? PaymentStatus.Completed : PaymentStatus.Pending,
+                PaidAt = dto.PaidAt,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = dto.CreatedBy ?? "System"
             };
@@ -94,23 +92,6 @@ namespace BackHotelBear.Services
 
             await _context.SaveChangesAsync();
             return true;
-        }
-        //forse da levare GetAllPayments ma per ora in sviluppo lo lascio
-        public async Task<List<PaymentDto>> GetAllPaymentsAsync()
-        {
-            var payments = await _context.Payments
-                .Include(p => p.PaymentMethod)
-                .Where(p => p.DeletedAt == null)
-                .ToListAsync();
-
-            var result = new List<PaymentDto>();
-            foreach (var p in payments)
-            {
-                var dto = await MapToDto(p);
-                if (dto != null) result.Add(dto);
-            }
-
-            return result;
         }
 
 
